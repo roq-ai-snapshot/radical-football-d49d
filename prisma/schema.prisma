@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model academy {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model development_plan {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id  String   @db.Uuid
+  coach_id   String   @db.Uuid
+  goals      String?  @db.VarChar(255)
+  progress   String?  @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  user       user     @relation(fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  player     player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model player {
+  id                         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                    String             @db.Uuid
+  coach_id                   String             @db.Uuid
+  personal_information       String?            @db.VarChar(255)
+  skills                     String?            @db.VarChar(255)
+  performance_data           String?            @db.VarChar(255)
+  created_at                 DateTime           @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime           @default(now()) @db.Timestamp(6)
+  development_plan           development_plan[]
+  user_player_coach_idTouser user               @relation("player_coach_idTouser", fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_player_user_idTouser  user               @relation("player_user_idTouser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                        String             @unique @db.VarChar(255)
+  firstName                    String?            @db.VarChar(255)
+  lastName                     String?            @db.VarChar(255)
+  roq_user_id                  String             @db.VarChar(255)
+  tenant_id                    String             @db.VarChar(255)
+  created_at                   DateTime           @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime           @default(now()) @db.Timestamp(6)
+  academy                      academy[]
+  development_plan             development_plan[]
+  player_player_coach_idTouser player[]           @relation("player_coach_idTouser")
+  player_player_user_idTouser  player[]           @relation("player_user_idTouser")
+}
